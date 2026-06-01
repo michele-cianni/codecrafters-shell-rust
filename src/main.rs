@@ -3,6 +3,7 @@ use std::env;
 use std::io::{self, Write};
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
+use std::process::Command;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Builtin {
@@ -11,7 +12,7 @@ enum Builtin {
     Type,
 }
 #[derive(Debug)]
-enum Command<'a> {
+enum CommandType<'a> {
     Builtin(Builtin, Vec<&'a str>),
     External(&'a str, Vec<&'a str>),
     Empty,
@@ -37,20 +38,20 @@ fn parse_builtin(cmd: &str) -> Option<Builtin> {
     }
 }
 
-fn parse_command(line: &str) -> Command<'_> {
+fn parse_command(line: &str) -> CommandType<'_> {
     if line.is_empty() {
-        return Command::Empty;
+        return CommandType::Empty;
     }
 
     let mut parts = line.split_whitespace();
     let Some(cmd) = parts.next() else {
-        return Command::Empty;
+        return CommandType::Empty;
     };
 
     let args = parts.collect();
     match parse_builtin(cmd) {
-        Some(builtin) => Command::Builtin(builtin, args),
-        None => Command::External(cmd, args),
+        Some(builtin) => CommandType::Builtin(builtin, args),
+        None => CommandType::External(cmd, args),
     }
 }
 
@@ -102,20 +103,25 @@ fn handle_echo_command(args: &[&str]) {
     println!("{}", args.join(" "));
 }
 
-fn dispatch_command(command: Command<'_>) -> io::Result<bool> {
+fn dispatch_command(command: CommandType<'_>) -> io::Result<bool> {
     match command {
-        Command::Empty => Ok(true),
-        Command::Builtin(Builtin::Exit, _) => Ok(false),
-        Command::Builtin(Builtin::Echo, args) => {
+        CommandType::Empty => Ok(true),
+        CommandType::Builtin(Builtin::Exit, _) => Ok(false),
+        CommandType::Builtin(Builtin::Echo, args) => {
             handle_echo_command(&args);
             Ok(true)
         }
-        Command::Builtin(Builtin::Type, args) => {
+        CommandType::Builtin(Builtin::Type, args) => {
             handle_type_command(&args);
             Ok(true)
         }
-        Command::External(cmd, _args) => {
-            println!("{cmd}: command not found");
+        CommandType::External(cmd, args) => {
+            let external_path = find_executable_in_path(cmd);
+            if let Some(path) = external_path {
+                Command::new(path).args(args).spawn()?;
+            } else {
+                println!("{cmd}: command not found");
+            }
             Ok(true)
         }
     }
