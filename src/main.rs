@@ -18,8 +18,8 @@ fn print_command_not_found(command: &str) {
 
 fn main() {
     loop {
-        print_prompt()?;
-        let command = read_command_line()?;
+        print_prompt().unwrap();
+        let command = read_command_line().unwrap();
         print_command_not_found(&command);
     }
 }
