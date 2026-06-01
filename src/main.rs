@@ -16,9 +16,10 @@ fn print_command_not_found(command: &str) {
     println!("{command}: command not found");
 }
 
-fn main() -> io::Result<()> {
-    print_prompt()?;
-    let command = read_command_line()?;
-    print_command_not_found(&command);
-    Ok(())
+fn main() {
+    loop {
+        print_prompt()?;
+        let command = read_command_line()?;
+        print_command_not_found(&command);
+    }
 }
