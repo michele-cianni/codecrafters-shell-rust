@@ -12,17 +12,26 @@ fn read_command_line() -> io::Result<String> {
     Ok(command.trim().to_string())
 }
 
-fn print_command_not_found(command: &str) {
+fn handle_command(command: &str) -> bool {
+    if command.is_empty() {
+        return true; // keep running
+    }
+
+    if command == "exit" {
+        return false; // stop loop
+    }
+
     println!("{command}: command not found");
+    true
 }
 
-fn main() {
+fn main() -> io::Result<()> {
     loop {
-        print_prompt().unwrap();
-        let command = read_command_line().unwrap();
-        if command == "exit" {
+        print_prompt()?;
+        let command = read_command_line()?;
+        if !handle_command(&command) {
             break;
         }
-        print_command_not_found(&command);
     }
+    Ok(())
 }
