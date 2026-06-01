@@ -12,6 +12,7 @@ enum Builtin {
     Echo,
     Type,
     Pwd,
+    Cd,
 }
 #[derive(Debug)]
 enum CommandType<'a> {
@@ -37,6 +38,7 @@ fn parse_builtin(cmd: &str) -> Option<Builtin> {
         "echo" => Some(Builtin::Echo),
         "type" => Some(Builtin::Type),
         "pwd" => Some(Builtin::Pwd),
+        "cd" => Some(Builtin::Cd),
         _ => None,
     }
 }
@@ -106,6 +108,22 @@ fn handle_echo_command(args: &[&str]) {
     println!("{}", args.join(" "));
 }
 
+fn handle_cd_command(args: &[&str]) {
+    let Some(target) = args.first().copied() else {
+        println!("cd: missing operand");
+        return;
+    };
+
+    let path = Path::new(target);
+
+    if !path.exists() || !path.is_dir() || !path.is_absolute() {
+        println!("cd: {}: No such file or directory", path.display());
+        return;
+    }
+
+    env::set_current_dir(&path).unwrap();
+}
+
 fn handle_pwd_command() {
     println!("{}", env::current_dir().unwrap().display());
 }
@@ -133,6 +151,10 @@ fn dispatch_command(command: CommandType<'_>) -> io::Result<bool> {
         }
         CommandType::Builtin(Builtin::Type, args) => {
             handle_type_command(&args);
+            Ok(true)
+        }
+        CommandType::Builtin(Builtin::Cd, args) => {
+            handle_cd_command(&args);
             Ok(true)
         }
         CommandType::Builtin(Builtin::Pwd, _) => {
