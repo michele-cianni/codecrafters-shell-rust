@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CopilotDiffPersistence">
+    <option name="pendingDiffs">
+      <map>
+        <entry key="/main (snapshot).rs">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="/main (snapshot).rs" />
+              <option name="originalContent" value="#[allow(unused_imports)]&#10;use std::io::{self, Write};&#10;&#10;fn main() {&#10;    print!(&quot;$ &quot;);&#10;    io::stdout().flush().unwrap();&#10;&#10;    // Wait for user input&#10;    let mut command = String::new();&#10;    io::stdin().read_line(&amp;mut command).unwrap();&#10;    println!(&quot;{}: command not found&quot;, command.trim())&#10;}&#10;" />
+              <option name="updatedContent" value="use std::io::{self, Write};&#10;&#10;fn print_prompt() -&gt; io::Result&lt;()&gt; {&#10;    print!(&quot;$ &quot;);&#10;    io::stdout().flush()&#10;}&#10;&#10;fn read_command_line() -&gt; io::Result&lt;String&gt; {&#10;    let mut command = String::new();&#10;    io::stdin().read_line(&amp;mut command)?;&#10;    Ok(command.trim().to_string())&#10;}&#10;&#10;fn print_command_not_found(command: &amp;str) {&#10;    println!(&quot;{command}: command not found&quot;);&#10;}&#10;&#10;fn main() -&gt; io::Result&lt;()&gt; {&#10;    print_prompt()?;&#10;    let command = read_command_line()?;&#10;    print_command_not_found(&amp;command);&#10;    Ok(())&#10;}&#10;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>
