@@ -1,8 +1,7 @@
 use std::env;
-use std::error::Error;
+use std::io::IsTerminal;
 #[allow(unused_imports)]
 use std::io::{self, Write};
-use std::io::IsTerminal;
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -12,6 +11,7 @@ enum Builtin {
     Exit,
     Echo,
     Type,
+    Pwd,
 }
 #[derive(Debug)]
 enum CommandType<'a> {
@@ -36,6 +36,7 @@ fn parse_builtin(cmd: &str) -> Option<Builtin> {
         "exit" => Some(Builtin::Exit),
         "echo" => Some(Builtin::Echo),
         "type" => Some(Builtin::Type),
+        "pwd" => Some(Builtin::Pwd),
         _ => None,
     }
 }
@@ -128,6 +129,10 @@ fn dispatch_command(command: CommandType<'_>) -> io::Result<bool> {
         }
         CommandType::Builtin(Builtin::Type, args) => {
             handle_type_command(&args);
+            Ok(true)
+        }
+        CommandType::Builtin(Builtin::Pwd, _) => {
+            println!("{}", env::current_dir()?.display());
             Ok(true)
         }
         CommandType::External(cmd, args) => {
