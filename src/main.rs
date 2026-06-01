@@ -1,4 +1,5 @@
 use std::env;
+use std::error::Error;
 #[allow(unused_imports)]
 use std::io::{self, Write};
 use std::io::IsTerminal;
@@ -104,6 +105,19 @@ fn handle_echo_command(args: &[&str]) {
     println!("{}", args.join(" "));
 }
 
+fn handle_external_command(cmd: &str, args: Vec<&str>) -> io::Result<()> {
+    let external_path = find_executable_in_path(cmd);
+    if let Some(path) = external_path {
+        Command::new(path.file_name().unwrap())
+            .args(args)
+            .spawn()?
+            .wait()?;
+    } else {
+        println!("{cmd}: command not found");
+    }
+    Ok(())
+}
+
 fn dispatch_command(command: CommandType<'_>) -> io::Result<bool> {
     match command {
         CommandType::Empty => Ok(true),
@@ -117,12 +131,7 @@ fn dispatch_command(command: CommandType<'_>) -> io::Result<bool> {
             Ok(true)
         }
         CommandType::External(cmd, args) => {
-            let external_path = find_executable_in_path(cmd);
-            if let Some(path) = external_path {
-                Command::new(path.file_name().unwrap()).args(args).spawn()?.wait()?;
-            } else {
-                println!("{cmd}: command not found");
-            }
+            handle_external_command(cmd, args)?;
             Ok(true)
         }
     }
