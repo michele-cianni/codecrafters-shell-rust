@@ -20,6 +20,9 @@ fn main() {
     loop {
         print_prompt().unwrap();
         let command = read_command_line().unwrap();
+        if command == "exit" {
+            break;
+        }
         print_command_not_found(&command);
     }
 }
