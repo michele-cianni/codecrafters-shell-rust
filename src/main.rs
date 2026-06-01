@@ -1,6 +1,7 @@
 use std::env;
 #[allow(unused_imports)]
 use std::io::{self, Write};
+use std::io::IsTerminal;
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -126,9 +127,10 @@ fn main() -> io::Result<()> {
     let stdin = io::stdin();
 
     loop {
-        print!("$ ");
-        io::stdout().flush()?;
-
+        if stdin.is_terminal() {
+            print!("$ ");
+            io::stdout().flush()?;
+        }
         let line = read_command_line()?;
         let command = parse_command(&line);
         if !dispatch_command(command)? {
