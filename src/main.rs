@@ -119,7 +119,7 @@ fn dispatch_command(command: CommandType<'_>) -> io::Result<bool> {
         CommandType::External(cmd, args) => {
             let external_path = find_executable_in_path(cmd);
             if let Some(path) = external_path {
-                Command::new(path).args(args).spawn()?.wait()?;
+                Command::new(path.file_name().unwrap()).args(args).spawn()?.wait()?;
             } else {
                 println!("{cmd}: command not found");
             }
