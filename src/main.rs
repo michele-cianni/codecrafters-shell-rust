@@ -106,6 +106,10 @@ fn handle_echo_command(args: &[&str]) {
     println!("{}", args.join(" "));
 }
 
+fn handle_pwd_command() {
+    println!("{}", env::current_dir().unwrap().display());
+}
+
 fn handle_external_command(cmd: &str, args: Vec<&str>) -> io::Result<()> {
     let external_path = find_executable_in_path(cmd);
     if let Some(path) = external_path {
@@ -132,7 +136,7 @@ fn dispatch_command(command: CommandType<'_>) -> io::Result<bool> {
             Ok(true)
         }
         CommandType::Builtin(Builtin::Pwd, _) => {
-            println!("{}", env::current_dir()?.display());
+            handle_pwd_command();
             Ok(true)
         }
         CommandType::External(cmd, args) => {
