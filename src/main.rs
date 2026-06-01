@@ -19,6 +19,11 @@ enum CommandType<'a> {
     Empty,
 }
 
+fn print_prompt() -> io::Result<()> {
+    print!("$ ");
+    io::stdout().flush()
+}
+
 fn read_command_line() -> io::Result<String> {
     let mut command = String::new();
     io::stdin().read_line(&mut command)?;
@@ -114,7 +119,7 @@ fn dispatch_command(command: CommandType<'_>) -> io::Result<bool> {
         CommandType::External(cmd, args) => {
             let external_path = find_executable_in_path(cmd);
             if let Some(path) = external_path {
-                Command::new(path).args(args).spawn()?;
+                Command::new(path).args(args).spawn()?.wait()?;
             } else {
                 println!("{cmd}: command not found");
             }
@@ -124,12 +129,9 @@ fn dispatch_command(command: CommandType<'_>) -> io::Result<bool> {
 }
 
 fn main() -> io::Result<()> {
-    let stdin = io::stdin();
-
     loop {
-        if stdin.is_terminal() {
-            print!("$ ");
-            io::stdout().flush()?;
+        if io::stdin().is_terminal() {
+            print_prompt()?;
         }
         let line = read_command_line()?;
         let command = parse_command(&line);
