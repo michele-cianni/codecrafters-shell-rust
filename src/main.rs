@@ -17,6 +17,12 @@ fn handle_command(command: &str) -> bool {
         return true; // keep running
     }
 
+    if command.starts_with("echo ") {
+        let message = &command[5..];
+        println!("{}", message);
+        return true; // keep running
+    }
+
     if command == "exit" {
         return false; // stop loop
     }
