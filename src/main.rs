@@ -12,44 +12,63 @@ fn read_command_line() -> io::Result<String> {
     Ok(command.trim().to_string())
 }
 
-fn handle_command(command: &str) -> bool {
-    if command.is_empty() {
+fn is_builtin(command: &str) -> bool {
+    matches!(command, "exit" | "echo" | "type")
+}
+
+fn handle_type_command(args: &[&str]) {
+    if args.is_empty() {
+        println!("type: missing operand");
+        return;
+    }
+
+    let target = args[0];
+
+    if is_builtin(target) {
+        println!("{target} is a shell builtin");
+    } else {
+        println!("{target}: not found");
+    }
+}
+
+fn handle_echo_command(args: &[&str]) {
+    let message = args.join(" ");
+    println!("{message}");
+}
+
+fn handle_command(line: &str) -> bool {
+    if line.is_empty() {
         return true; // keep running
     }
-    if command.starts_with("type") {
-        let &other_command = &command["type".len()..].trim();
-        if other_command.is_empty() {
-            println!("type: missing operand");
+
+    let mut parts = line.split_whitespace();
+    let Some(cmd) = parts.next() else { return true; };
+    let args:Vec<&str> = parts.collect();
+
+    match cmd {
+        "type" => {
+            handle_type_command(&args);
+            return true;
+        },
+        "echo" => {
+            handle_echo_command(&args);
+            return true;
         }
-        if other_command == "echo" || other_command == "exit" || other_command == "type" {
-            println!("{} is a shell builtin", other_command.trim());
+        "exit" => {
+            return false; // exit the shell
         }
-        else {
-            println!("{}: not found", other_command.trim());
+        _ => {
+            println!("{cmd}: command not found");
+            true
         }
-
-        return true;
     }
-
-    if command.starts_with("echo ") {
-        let message = &command[5..];
-        println!("{}", message);
-        return true; // keep running
-    }
-
-    if command == "exit" {
-        return false; // stop loop
-    }
-
-    println!("{command}: command not found");
-    true
 }
 
 fn main() -> io::Result<()> {
     loop {
         print_prompt()?;
-        let command = read_command_line()?;
-        if !handle_command(&command) {
+        let line = read_command_line()?;
+        if !handle_command(&line) {
             break;
         }
     }
