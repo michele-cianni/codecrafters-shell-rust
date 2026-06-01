@@ -16,6 +16,20 @@ fn handle_command(command: &str) -> bool {
     if command.is_empty() {
         return true; // keep running
     }
+    if command.starts_with("type") {
+        let &other_command = &command["type".len()..].trim();
+        if other_command.is_empty() {
+            println!("type: missing operand");
+        }
+        if other_command == "echo" || other_command == "exit" || other_command == "type" {
+            println!("{} is a shell builtin", other_command.trim());
+        }
+        else {
+            println!("{}: not found", other_command.trim());
+        }
+
+        return true;
+    }
 
     if command.starts_with("echo ") {
         let message = &command[5..];
