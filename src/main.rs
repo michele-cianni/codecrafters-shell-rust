@@ -18,11 +18,6 @@ enum CommandType<'a> {
     Empty,
 }
 
-fn print_prompt() -> io::Result<()> {
-    print!("$ ");
-    io::stdout().flush()
-}
-
 fn read_command_line() -> io::Result<String> {
     let mut command = String::new();
     io::stdin().read_line(&mut command)?;
@@ -128,8 +123,12 @@ fn dispatch_command(command: CommandType<'_>) -> io::Result<bool> {
 }
 
 fn main() -> io::Result<()> {
+    let stdin = io::stdin();
+
     loop {
-        print_prompt()?;
+        print!("$ ");
+        io::stdout().flush()?;
+
         let line = read_command_line()?;
         let command = parse_command(&line);
         if !dispatch_command(command)? {
