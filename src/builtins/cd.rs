@@ -14,7 +14,7 @@ impl CommandHandler for CdHandler {
 
         let path = Path::new(target);
 
-        if !path.exists() || !path.is_dir() || !path.is_absolute() {
+        if !path.exists() || !path.is_dir() {
             println!("cd: {}: No such file or directory", path.display());
         } else if let Err(err) = env::set_current_dir(path) {
             println!("cd: error: {}", err);
