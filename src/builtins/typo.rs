@@ -6,8 +6,8 @@ use crate::shell::parser::parse_builtin;
 pub struct TypeHandler;
 
 impl CommandHandler for TypeHandler {
-    fn execute(&self, args: &[&str]) -> CommandResult {
-        let Some(target) = args.first().copied() else {
+    fn execute(&self, args: Vec<String>) -> CommandResult {
+        let Some(target) = args.first() else {
             println!("type: missing operand");
             return CommandResult::Continue
         };

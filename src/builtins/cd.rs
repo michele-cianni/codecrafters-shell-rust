@@ -8,7 +8,7 @@ pub struct CdHandler;
 const HOME: &'static str = "HOME";
 
 impl CdHandler {
-    fn expand_target(target: &str) -> Option<PathBuf> {
+    fn expand_target(target: &String) -> Option<PathBuf> {
         if target == "~" {
             env::var_os(HOME).map(PathBuf::from)
         } else if let Some(stripped) = target.strip_prefix("~/") {
@@ -20,11 +20,11 @@ impl CdHandler {
 }
 
 impl CommandHandler for CdHandler {
-    fn execute(&self, args: &[&str]) -> CommandResult {
-        let target = args.first().copied().unwrap_or("~");
+    fn execute(&self, args: Vec<String>) -> CommandResult {
+        let target = args.first().cloned().unwrap_or_else(|| "~".to_string());
 
-        let Some(path) = Self::expand_target(target) else {
-            println!("cd: {}: No such file or directory", target);
+        let Some(path) = Self::expand_target(&target) else {
+            println!("cd: {}: No such file or directory", &target);
             return CommandResult::Continue;
         };
 

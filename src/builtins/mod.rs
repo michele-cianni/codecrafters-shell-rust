@@ -7,5 +7,5 @@ pub mod exit;
 use crate::shell::command::CommandResult;
 
 pub trait CommandHandler {
-    fn execute(&self, args: &[&str]) -> CommandResult;
+    fn execute(&self, args: Vec<String>) -> CommandResult;
 }

@@ -1,17 +1,14 @@
 use crate::shell::command::{BuiltinCommand, CommandType};
 
-pub fn parse_command(line: &str) -> CommandType<'_> {
-    if line.is_empty() {
+pub fn parse_command(line: &str) -> CommandType {
+    let tokens = tokenize(line);
+    if tokens.is_empty() {
         return CommandType::Empty;
     }
 
-    let mut parts = line.split_whitespace();
-    let Some(cmd) = parts.next() else {
-        return CommandType::Empty;
-    };
-
-    let args = parts.collect();
-    match parse_builtin(cmd) {
+    let cmd = tokens[0].clone();
+    let args = tokens[1..].to_vec();
+    match parse_builtin(&cmd) {
         Some(builtin) => CommandType::Builtin(builtin, args),
         None => CommandType::External(cmd, args),
     }
@@ -26,4 +23,31 @@ pub fn parse_builtin(cmd: &str) -> Option<BuiltinCommand> {
         "cd" => Some(BuiltinCommand::Cd),
         _ => None,
     }
+}
+
+pub fn tokenize(line: &str) -> Vec<String> {
+    let mut tokens = Vec::new();
+    let mut current = String::new();
+    let mut in_single_quote = false;
+    let mut chars = line.chars().peekable();
+
+    while let Some(ch) = chars.next() {
+        match ch {
+            ' ' | '\t' if !in_single_quote => {
+                if !current.is_empty() {
+                    tokens.push(current.clone());
+                    current.clear();
+                }
+            }
+            '\'' if !in_single_quote => in_single_quote = true,
+            '\'' if in_single_quote => in_single_quote = false,
+            _ => current.push(ch),
+        }
+    }
+
+    if !current.is_empty() {
+        tokens.push(current);
+    }
+
+    tokens
 }

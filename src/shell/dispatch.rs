@@ -20,15 +20,15 @@ impl Dispatcher {
         }
     }
 
-    pub fn dispatch(&self, command: CommandType<'_>) -> CommandResult {
+    pub fn dispatch(&self, command: CommandType) -> CommandResult {
         match command {
             Empty => Continue,
-            Builtin(builtin, args) => self.dispatch_builtin(builtin, &args),
-            External(cmd, args) =>  self.executor.execute(cmd, args),
+            Builtin(builtin, args) => self.dispatch_builtin(builtin, args),
+            External(cmd, args) =>  self.executor.execute(&cmd, args),
         }
     }
 
-    fn dispatch_builtin(&self, b: BuiltinCommand, args: &[&str]) -> CommandResult {
+    fn dispatch_builtin(&self, b: BuiltinCommand, args: Vec<String>) -> CommandResult {
         let handler: &dyn CommandHandler = match b {
             BuiltinCommand::Echo => &EchoHandler,
             BuiltinCommand::Type => &TypeHandler,

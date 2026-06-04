@@ -11,7 +11,7 @@ impl ExternalExecutor {
         ExternalExecutor
     }
 
-    pub fn execute(&self, cmd: &str, args: Vec<&str>) -> CommandResult {
+    pub fn execute(&self, cmd: &String, args: Vec<String>) -> CommandResult {
         let Some(path) = find_in_path(cmd) else {
             println!("{cmd}: command not found");
             return CommandResult::Continue;

@@ -8,9 +8,9 @@ pub enum BuiltinCommand {
 }
 
 #[derive(Debug)]
-pub enum CommandType<'a> {
-    Builtin(BuiltinCommand, Vec<&'a str>),
-    External(&'a str, Vec<&'a str>),
+pub enum CommandType {
+    Builtin(BuiltinCommand, Vec<String>),
+    External(String, Vec<String>),
     Empty,
 }
 

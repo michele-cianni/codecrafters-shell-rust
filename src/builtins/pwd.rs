@@ -5,7 +5,7 @@ use crate::shell::command::CommandResult;
 pub struct PwdHandler;
 
 impl CommandHandler for PwdHandler {
-    fn execute(&self, args: &[&str]) -> CommandResult {
+    fn execute(&self, args: Vec<String>) -> CommandResult {
         if !args.is_empty() {
             println!("pwd: arguments not supported");
             return CommandResult::Continue;
