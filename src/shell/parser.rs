@@ -29,18 +29,21 @@ pub fn tokenize(line: &str) -> Vec<String> {
     let mut tokens = Vec::new();
     let mut current = String::new();
     let mut in_single_quote = false;
+    let mut in_double_quote = false;
     let mut chars = line.chars().peekable();
 
     while let Some(ch) = chars.next() {
         match ch {
-            ' ' | '\t' if !in_single_quote => {
+            ' ' | '\t' if !in_single_quote && !in_double_quote => {
                 if !current.is_empty() {
                     tokens.push(current.clone());
                     current.clear();
                 }
             }
-            '\'' if !in_single_quote => in_single_quote = true,
+            '\'' if !in_single_quote && !in_double_quote => in_single_quote = true,
             '\'' if in_single_quote => in_single_quote = false,
+            '\"' if !in_double_quote && !in_single_quote => in_double_quote = true,
+            '\"' if in_double_quote => in_double_quote = false,
             _ => current.push(ch),
         }
     }
