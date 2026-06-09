@@ -1,3 +1,4 @@
+use std::mem::take;
 use crate::shell::command::{BuiltinCommand, CommandType};
 
 pub fn parse_command(line: &str) -> CommandType {
@@ -25,32 +26,46 @@ pub fn parse_builtin(cmd: &str) -> Option<BuiltinCommand> {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum QuoteState {
+    None,
+    Single,
+    Double,
+}
+
 pub fn tokenize(line: &str) -> Vec<String> {
     let mut tokens = Vec::new();
     let mut current = String::new();
-    let mut in_single_quote = false;
-    let mut in_double_quote = false;
-    let mut chars = line.chars().peekable();
+    let mut state = QuoteState::None;
 
-    while let Some(ch) = chars.next() {
-        match ch {
-            ' ' | '\t' if !in_single_quote && !in_double_quote => {
-                if !current.is_empty() {
-                    tokens.push(current.clone());
-                    current.clear();
-                }
-            }
-            '\'' if !in_single_quote && !in_double_quote => in_single_quote = true,
-            '\'' if in_single_quote => in_single_quote = false,
-            '\"' if !in_double_quote && !in_single_quote => in_double_quote = true,
-            '\"' if in_double_quote => in_double_quote = false,
+    let flush_current =
+        |tokens: &mut Vec<String>, current: &mut String| {
+        if !current.is_empty() {
+            tokens.push(take(current));
+        }
+    };
+
+    const SINGLE_QUOTE: char = '\'';
+    const DOUBLE_QUOTE: char = '\"';
+
+    for ch in line.chars() {
+        match (state, ch) {
+            // Outside quotes
+            (QuoteState::None, ' ' | '\t') => flush_current(&mut tokens, &mut current),
+
+            // Opening quotes
+            (QuoteState::None, SINGLE_QUOTE) => state = QuoteState::Single,
+            (QuoteState::None, DOUBLE_QUOTE) => state = QuoteState::Double,
+
+            // Closing quotes
+            (QuoteState::Single, SINGLE_QUOTE) => state = QuoteState::None,
+            (QuoteState::Double, DOUBLE_QUOTE) => state = QuoteState::None,
+
+            // Other chars
             _ => current.push(ch),
         }
     }
 
-    if !current.is_empty() {
-        tokens.push(current);
-    }
-
+    flush_current(&mut tokens, &mut current);
     tokens
 }
