@@ -1,5 +1,5 @@
-use std::mem::take;
 use crate::shell::command::{BuiltinCommand, CommandType};
+use std::mem::take;
 
 pub fn parse_command(line: &str) -> CommandType {
     let tokens = tokenize(line);
@@ -31,6 +31,7 @@ enum QuoteState {
     None,
     Single,
     Double,
+    Backslash,
 }
 
 pub fn tokenize(line: &str) -> Vec<String> {
@@ -38,28 +39,35 @@ pub fn tokenize(line: &str) -> Vec<String> {
     let mut current = String::new();
     let mut state = QuoteState::None;
 
-    let flush_current =
-        |tokens: &mut Vec<String>, current: &mut String| {
+    let flush_current = |tokens: &mut Vec<String>, current: &mut String| {
         if !current.is_empty() {
             tokens.push(take(current));
         }
     };
 
+    const SPACE: char = ' ';
+    const TAB: char = '\t';
+    const BACKSLASH: char = '\\';
     const SINGLE_QUOTE: char = '\'';
     const DOUBLE_QUOTE: char = '\"';
 
     for ch in line.chars() {
         match (state, ch) {
             // Outside quotes
-            (QuoteState::None, ' ' | '\t') => flush_current(&mut tokens, &mut current),
+            (QuoteState::None, SPACE | TAB) => flush_current(&mut tokens, &mut current),
 
             // Opening quotes
             (QuoteState::None, SINGLE_QUOTE) => state = QuoteState::Single,
             (QuoteState::None, DOUBLE_QUOTE) => state = QuoteState::Double,
+            (QuoteState::None, BACKSLASH) => state = QuoteState::Backslash,
 
             // Closing quotes
             (QuoteState::Single, SINGLE_QUOTE) => state = QuoteState::None,
             (QuoteState::Double, DOUBLE_QUOTE) => state = QuoteState::None,
+            (QuoteState::Backslash, ch) => {
+                current.push(ch);
+                state = QuoteState::None;
+            }
 
             // Other chars
             _ => current.push(ch),
