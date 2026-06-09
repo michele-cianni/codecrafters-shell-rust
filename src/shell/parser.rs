@@ -1,6 +1,12 @@
 use crate::shell::command::{BuiltinCommand, CommandType};
 use std::mem::take;
 
+const SPACE: char = ' ';
+const TAB: char = '\t';
+const BACKSLASH: char = '\\';
+const SINGLE_QUOTE: char = '\'';
+const DOUBLE_QUOTE: char = '\"';
+
 pub fn parse_command(line: &str) -> CommandType {
     let tokens = tokenize(line);
     if tokens.is_empty() {
@@ -34,46 +40,51 @@ enum QuoteState {
     Backslash,
 }
 
+impl QuoteState {
+    fn next(self, ch: char, current: &mut String) -> Self {
+        match (self, ch) {
+            (QuoteState::None, SINGLE_QUOTE) => QuoteState::Single,
+            (QuoteState::None, DOUBLE_QUOTE) => QuoteState::Double,
+            (QuoteState::None, BACKSLASH) => QuoteState::Backslash,
+
+            (QuoteState::Single, SINGLE_QUOTE) => QuoteState::None,
+            (QuoteState::Double, DOUBLE_QUOTE) => QuoteState::None,
+            (QuoteState::Backslash, ch) => {
+                current.push(ch);
+                QuoteState::None
+            }
+
+            (_, ch) => {
+                current.push(ch);
+                self
+            }
+        }
+    }
+
+    fn is_token_separator(self, ch: char) -> bool {
+        self == QuoteState::None && matches!(ch, SPACE | TAB)
+    }
+}
+
 pub fn tokenize(line: &str) -> Vec<String> {
     let mut tokens = Vec::new();
     let mut current = String::new();
     let mut state = QuoteState::None;
 
-    let flush_current = |tokens: &mut Vec<String>, current: &mut String| {
-        if !current.is_empty() {
-            tokens.push(take(current));
-        }
-    };
-
-    const SPACE: char = ' ';
-    const TAB: char = '\t';
-    const BACKSLASH: char = '\\';
-    const SINGLE_QUOTE: char = '\'';
-    const DOUBLE_QUOTE: char = '\"';
-
     for ch in line.chars() {
-        match (state, ch) {
-            // Outside quotes
-            (QuoteState::None, SPACE | TAB) => flush_current(&mut tokens, &mut current),
-
-            // Opening quotes
-            (QuoteState::None, SINGLE_QUOTE) => state = QuoteState::Single,
-            (QuoteState::None, DOUBLE_QUOTE) => state = QuoteState::Double,
-            (QuoteState::None, BACKSLASH) => state = QuoteState::Backslash,
-
-            // Closing quotes
-            (QuoteState::Single, SINGLE_QUOTE) => state = QuoteState::None,
-            (QuoteState::Double, DOUBLE_QUOTE) => state = QuoteState::None,
-            (QuoteState::Backslash, ch) => {
-                current.push(ch);
-                state = QuoteState::None;
-            }
-
-            // Other chars
-            _ => current.push(ch),
+        if state.is_token_separator(ch) {
+            flush_token(&mut tokens, &mut current);
+        } else {
+            state = state.next(ch, &mut current);
         }
     }
 
-    flush_current(&mut tokens, &mut current);
+    flush_token(&mut tokens, &mut current);
     tokens
+}
+
+fn flush_token(tokens: &mut Vec<String>, current: &mut String) {
+    if !current.is_empty() {
+        tokens.push(take(current));
+    }
 }
