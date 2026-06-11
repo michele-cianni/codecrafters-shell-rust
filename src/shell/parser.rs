@@ -37,7 +37,7 @@ enum QuoteState {
     None,
     Single,
     Double,
-    Backslash,
+    Backslash(bool),
 }
 
 impl QuoteState {
@@ -45,13 +45,19 @@ impl QuoteState {
         match (self, ch) {
             (QuoteState::None, SINGLE_QUOTE) => QuoteState::Single,
             (QuoteState::None, DOUBLE_QUOTE) => QuoteState::Double,
-            (QuoteState::None, BACKSLASH) => QuoteState::Backslash,
+            (QuoteState::None, BACKSLASH) => QuoteState::Backslash(false),
 
             (QuoteState::Single, SINGLE_QUOTE) => QuoteState::None,
             (QuoteState::Double, DOUBLE_QUOTE) => QuoteState::None,
-            (QuoteState::Backslash, ch) => {
+            (QuoteState::Double, BACKSLASH) => QuoteState::Backslash(true),
+
+            (QuoteState::Backslash(false), ch) => {
                 current.push(ch);
                 QuoteState::None
+            }
+            (QuoteState::Backslash(true), ch) => {
+                current.push(ch);
+                QuoteState::Double
             }
 
             (_, ch) => {
